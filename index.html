@@ -1,1171 +1,461 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Food KE Rechner</title>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-        />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-        <style>
-            :root {
-                --background-color: #1a1a1a;
-                --surface-color: #2c2c2c;
-                --border-color: #444444;
-                --text-color-primary: #e0e0e0;
-                --text-color-secondary: #aaaaaa;
-                --accent-color: #4caf50; /* Grün für positive Aktionen, bleibt für Buttons */
-                --accent-color-hover: #43a047;
-                --delete-color: #f44336; /* Rot für Löschen */
-                --shadow-color: rgba(0, 0, 0, 0.4);
-                --item-hover-bg: #3a3a3a;
-                --numbering-color: #999999; /* Farbe für die Nummerierung */
-                --focused-item-bg: #555555; /* Hintergrund für fokussiertes Element */
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Carb Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/8a47f7e5b3.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #1e1e1e;
+            padding-top: 50px;
+            box-sizing: border-box;
+        }
 
-            body {
-                display: flex;
-                justify-content: flex-start; /* Inhalte oben ausrichten, nicht zentrieren */
-                align-items: center; /* Behält horizontale Zentrierung bei */
-                min-height: 100vh;
-                margin: 0;
-                font-family: "Inter", sans-serif;
-                background-color: var(--background-color);
-                flex-direction: column;
-                color: var(--text-color-primary);
-                padding-top: 40px; /* Oberer Abstand, um Platz für die Tastatur zu lassen */
-                box-sizing: border-box; /* Stellt sicher, dass Padding die Gesamtgröße nicht erhöht */
-            }
+        .food-search-wrapper {
+            position: relative;
+            width: 80vw;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
 
+        .food-search-container {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 6px 6px rgba(0, 0, 0, 0.23);
+            border-radius: 12px;
+            background-color: rgba(45, 45, 45, 0.9);
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .food-search-icon {
+            position: absolute;
+            left: 15px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .food-search-input {
+            flex-grow: 1;
+            height: 100%;
+            padding: 0 20px 0 50px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight on mobile Safari/Chrome */
+        }
+
+        .food-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 400;
+            text-align: left;
+            padding-left: 0;
+        }
+
+        .gramm-input {
+            flex-shrink: 0;
+            width: 100px;
+            height: 100%;
+            background-color: rgba(60, 60, 60, 0.9);
+            border: none;
+            outline: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 0 10px;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+            -moz-appearance: textfield; /* Firefox */
+            -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight */
+        }
+
+        .gramm-input::-webkit-outer-spin-button,
+        .gramm-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; /* Chrome, Safari, Edge */
+            margin: 0; /* Important for Safari */
+        }
+
+        .gramm-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Autocomplete Suggestions */
+        .suggestions-box {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            width: 100%;
+            background-color: rgba(45, 45, 45, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 8px 8px rgba(0, 0, 0, 0.3);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1;
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+        }
+
+        .suggestions-box.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .suggestions-box li {
+            padding: 12px 20px;
+            color: white;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 17px;
+            transition: background-color 0.2s ease;
+            -webkit-tap-highlight-color: rgba(80, 80, 80, 0.5); /* Custom tap highlight color */
+        }
+
+        .suggestions-box li:first-child {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .suggestions-box li:last-child {
+            border-bottom: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        .suggestions-box li:hover {
+            background-color: rgba(80, 80, 80, 0.9);
+        }
+
+        /* Carb Result Display */
+        .carb-result-box {
+            width: 80vw;
+            max-width: 600px;
+            background-color: rgba(45, 45, 45, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 6px 6px rgba(0, 0, 0, 0.23);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            min-height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            box-sizing: border-box;
+        }
+
+        .carb-result-box.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .carb-result-box span {
+            color: #00bcd4;
+            margin-left: 5px;
+        }
+
+        /* Responsive Anpassungen */
+        @media (max-width: 768px) {
             .food-search-wrapper {
-                position: relative;
-                width: 80vw;
-                max-width: 600px;
-                z-index: 10;
+                width: 90vw;
             }
-
             .food-search-container {
-                position: relative;
-                width: 100%; /* Nimmt 100% der Breite des Wrappers ein */
-                height: 60px;
-                display: flex;
-                align-items: center;
-                box-shadow: 0 10px 25px var(--shadow-color);
-                background-color: var(--surface-color);
-                border-radius: 15px;
-                padding-left: 20px;
-                padding-right: 20px;
-                box-sizing: border-box;
-                overflow: hidden;
-                z-index: 10;
-            }
-
-            .food-search-icon {
-                color: var(--text-color-secondary);
-                font-size: 24px;
-                margin-right: 15px;
-                pointer-events: none;
-                flex-shrink: 0;
-            }
-
-            .food-search-input {
-                flex-grow: 1;
-                height: 100%;
-                padding: 0;
-                border: none;
-                outline: none; /* Entfernt den Fokus-Rahmen */
-                background: transparent;
-                color: rgba(224, 224, 224, 0.8); /* Angepasst für glassy look */
-                font-size: 20px;
-                font-weight: 500;
-                box-sizing: border-box;
-                min-width: 0;
-            }
-
-            .food-search-input::placeholder {
-                color: rgba(170, 170, 170, 0.6); /* Angepasst für glassy look */
-                font-weight: 400;
-            }
-
-            .food-search-container.active-quantity .food-search-input {
-                flex-grow: 0;
-                width: 150px;
-                margin-right: 10px;
-            }
-
-            .food-search-results {
-                position: absolute;
-                top: calc(100% + 20px);
-                left: 0;
-                width: 100%; /* Nimmt 100% der Breite des Wrappers ein */
-                background-color: var(--surface-color);
-                border-radius: 15px;
-                overflow: hidden;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(8px);
-                transition:
-                    opacity 0.3s ease,
-                    visibility 0.3s ease,
-                    transform 0.3s ease;
-                box-shadow: 0 10px 25px var(--shadow-color);
-                pointer-events: none;
-                z-index: 11;
-                padding: 0;
-            }
-
-            .food-search-results.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-                pointer-events: auto;
-            }
-
-            .food-search-item {
-                padding: 16px 25px;
-                padding-left: 20px;
-                color: var(--text-color-primary);
-                font-size: 18px;
-                cursor: pointer;
-                border-bottom: 1px solid var(--border-color);
-                transition: background-color 0.2s ease;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                border-radius: 0;
-            }
-
-            .food-search-item .item-number {
-                color: var(--numbering-color);
-                font-weight: 500;
-                min-width: 15px;
-                text-align: right;
-                opacity: 0.7;
-            }
-
-            .food-search-item:last-child {
-                border-bottom: none;
-            }
-
-            .food-search-item:hover,
-            .food-search-item:focus {
-                background-color: var(--item-hover-bg);
-                outline: none;
-            }
-
-            .food-search-item.focused-by-number {
-                background-color: var(--focused-item-bg);
-                outline: 2px solid var(--text-color-primary);
-                outline-offset: -2px;
-            }
-
-            .quantity-input-container {
-                display: none;
-                align-items: center;
-                gap: 12px;
-                margin-left: auto;
-                flex-shrink: 0;
-            }
-
-            .quantity-input-container.show {
-                display: flex;
-            }
-
-            .quantity-input-container input[type="number"] {
-                width: 100px;
-                padding: 12px 15px;
-                border-radius: 15px;
-                border: none;
-                background-color: var(--surface-color);
-                color: rgba(224, 224, 224, 0.8);
-                font-size: 18px;
-                outline: none;
-                box-shadow: none;
-                transition:
-                    background-color 0.3s ease,
-                    border-color 0.3s ease;
-                text-align: center;
-            }
-
-            input::-webkit-outer-spin-button,
-            input::-webkit-inner-spin-button {
-                -webkit-appearance: none;
-                margin: 0;
-            }
-
-            .quantity-input-container input[type="number"]::placeholder {
-                color: rgba(170, 170, 170, 0.6);
-            }
-
-            .quantity-input-container button {
-                padding: 12px 18px;
-                background-color: var(--accent-color);
-                color: white;
-                border: none;
-                border-radius: 15px;
-                font-size: 16px;
-                cursor: pointer;
-                transition:
-                    background-color 0.3s ease,
-                    transform 0.15s ease-out;
-                flex-shrink: 0;
-                outline: none;
-            }
-
-            .quantity-input-container button:hover {
-                background-color: var(--accent-color-hover);
-            }
-
-            .quantity-input-container button:focus-visible {
-                outline: 2px solid var(--text-color-primary);
-                outline-offset: 2px;
-            }
-
-            .quantity-input-container button.clicked {
-                transform: scale(1.2);
-            }
-
-            .result-container {
-                width: 80vw;
-                max-width: 600px;
-                background-color: var(--surface-color);
-                border-radius: 15px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(8px);
-                transition:
-                    opacity 0.3s ease,
-                    visibility 0.3s ease,
-                    transform 0.3s ease;
-                box-shadow: 0 10px 25px var(--shadow-color);
-                pointer-events: none;
-                z-index: 8;
-                padding: 20px;
-                box-sizing: border-box;
-                color: var(--text-color-primary);
-                font-size: 18px;
-                touch-action: pan-y;
-                margin-top: 20px;
-            }
-
-            .result-container.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-                pointer-events: auto;
-            }
-
-            .result-item {
-                margin-bottom: 10px;
-                padding: 15px;
-                background-color: var(--surface-color);
+                height: 45px;
                 border-radius: 10px;
-                position: relative;
-                overflow: hidden;
-                transition:
-                    background-color 0.2s ease,
-                    transform 0.2s ease;
-                cursor: grab;
-                border: 1px solid var(--border-color);
             }
-
-            .result-item:last-child {
-                margin-bottom: 0;
-            }
-
-            /* Standard (Desktop) Layout für result-item-content */
-            .result-item-content {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: baseline;
-                width: 100%;
-                gap: 8px;
-            }
-
-            .result-item .item-number-list {
-                color: var(--numbering-color);
-                font-weight: 500;
-                min-width: 18px;
-                text-align: right;
-                opacity: 0.7;
-                font-size: 16px;
-                flex-shrink: 0;
-            }
-
-            .result-item .item-name {
-                font-weight: 400;
-                margin-bottom: 0;
-                flex-shrink: 0;
-                color: var(--text-color-primary);
-                flex-grow: 1;
-            }
-
-            .result-item .quantity-ke-info {
-                display: inline;
-                color: var(--text-color-secondary);
-                font-weight: 400;
-                margin-left: auto;
-            }
-
-            .result-item span .ke-value {
-                font-weight: 400;
-                color: var(--text-color-primary);
-            }
-
-            .delete-indicator {
-                position: absolute;
-                top: 0;
-                right: 0;
-                background-color: var(--delete-color);
-                color: white;
-                width: 0;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: width 0.2s ease;
-                font-size: 20px;
-                overflow: hidden;
-            }
-
-            .delete-indicator i {
-                opacity: 0;
-                transition: opacity 0.1s ease;
-            }
-
-            .delete-indicator.show-icon i {
-                opacity: 1;
-            }
-
-            /* Info Pop-up Styling */
-            .info-popup {
-                position: absolute;
-                top: calc(100% + 20px);
-                left: 50%;
-                transform: translateX(-50%);
-                width: 100%;
-                background-color: var(--accent-color);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 15px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                opacity: 0;
-                visibility: hidden;
-                transition:
-                    opacity 0.3s ease,
-                    visibility 0.3s ease,
-                    transform 0.3s ease;
-                z-index: 12;
-                box-sizing: border-box;
-            }
-
-            .info-popup.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateX(-50%) translateY(0px);
-            }
-
-            .info-popup #infoPopupText {
-                flex-grow: 1;
-                font-size: 16px;
-                line-height: 1.4;
-            }
-
-            .info-popup .close-info-popup {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 20px;
-                cursor: pointer;
-                padding: 5px;
-                transition: transform 0.2s ease;
-            }
-
-            .info-popup .close-info-popup:hover {
-                transform: scale(1.1);
-            }
-
-            .total-summary-container {
-                width: 80vw;
-                max-width: 600px;
-                background-color: var(--surface-color);
-                border-radius: 15px;
-                box-shadow: 0 10px 25px var(--shadow-color);
-                padding: 20px;
-                box-sizing: border-box;
-                color: var(--text-color-primary);
+            .food-search-icon {
+                left: 12px;
                 font-size: 18px;
-                margin-top: 20px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(8px);
-                transition:
-                    opacity 0.3s ease,
-                    visibility 0.3s ease,
-                    transform 0.3s ease;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
             }
-
-            .total-summary-container.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
+            .food-search-input {
+                font-size: 16px;
+                padding: 0 15px 0 45px;
             }
-
-            .total-summary-container span {
-                font-weight: 600;
-                color: var(--accent-color);
+            .gramm-input {
+                width: 80px;
+                font-size: 16px;
+                border-top-right-radius: 10px;
+                border-bottom-right-radius: 10px;
             }
-
-            /* MEDIA QUERIES for Mobile Optimization */
-            @media (max-width: 768px) {
-                body {
-                    padding-top: 30px; /* Mehr Platz oben */
-                }
-                .food-search-wrapper {
-                    width: 90vw;
-                }
-                .result-container,
-                .total-summary-container {
-                    width: 90vw;
-                }
-
-                .food-search-container {
-                    height: 60px; /* Erhöht von 50px */
-                    padding-left: 20px; /* Erhöht von 15px */
-                    padding-right: 20px; /* Erhöht von 15px */
-                }
-                .food-search-icon {
-                    font-size: 28px; /* Deutlich größer */
-                    margin-right: 15px; /* Mehr Abstand */
-                }
-                .food-search-input {
-                    font-size: 18px; /* Erhöht von 16px */
-                }
-                .food-search-container.active-quantity .food-search-input {
-                    width: calc(
-                        100% - 180px
-                    ); /* Mehr Platz für Input, da Buttons größer werden */
-                    margin-right: 10px; /* Mehr Abstand */
-                }
-                .food-search-results {
-                    width: 100%;
-                }
-                .food-search-item {
-                    font-size: 17px; /* Erhöht von 15px */
-                    padding: 16px 20px; /* Mehr Padding */
-                }
-                .food-search-item .item-number {
-                    /* Nummerierung */
-                    font-size: 16px; /* Größer */
-                    min-width: 20px; /* Mehr Platz */
-                }
-
-                .quantity-input-container {
-                    gap: 10px; /* Mehr Abstand */
-                }
-                .quantity-input-container input[type="number"] {
-                    width: 90px; /* Erhöht von 70px */
-                    font-size: 17px; /* Erhöht von 15px */
-                    padding: 10px 15px; /* Mehr Padding */
-                }
-                .quantity-input-container button {
-                    font-size: 16px; /* Erhöht von 14px */
-                    padding: 10px 15px; /* Erhöht von 8px 12px */
-                    border-radius: 15px; /* Einheitlicher mit anderen Elementen */
-                }
-                .delete-indicator {
-                    width: 0;
-                    font-size: 24px; /* Größer für besseres Treffen */
-                }
-
-                .info-popup {
-                    top: calc(100% + 20px); /* Mehr Abstand */
-                    font-size: 16px; /* Erhöht von 14px */
-                    padding: 15px 20px; /* Mehr Padding */
-                    width: 100%;
-                    transform: translateX(-50%);
-                }
-                .info-popup #infoPopupText {
-                    font-size: 16px; /* Erhöht von 14px */
-                }
-                .info-popup .close-info-popup {
-                    font-size: 24px; /* Größer */
-                }
-
-                /* RESULT ITEM SPECIFIC CHANGES FOR MOBILE */
-                .result-item {
-                    padding: 15px; /* Erhöht von 12px */
-                    font-size: 18px; /* Erhöht von 16px */
-                }
-                .result-item-content {
-                    gap: 8px; /* Mehr Abstand */
-                }
-
-                .result-item .item-number-list {
-                    font-size: 16px; /* Erhöht von 14px */
-                    min-width: 20px; /* Mehr Platz */
-                }
-                .result-item .item-name {
-                    font-size: 18px; /* Erhöht von 16px */
-                }
-                .result-item .quantity-ke-info {
-                    font-size: 16px; /* Erhöht von 14px */
-                    margin-left: 28px; /* Angepasst */
-                }
-                .result-item span .ke-value {
-                    font-size: 16px; /* Erhöht von 14px */
-                }
-
-                /* TOTAL SUMMARY SPECIFIC CHANGES FOR MOBILE */
-                .total-summary-container {
-                    padding: 15px 20px; /* Erhöht von 12px 15px */
-                    font-size: 17px; /* Erhöht von 15px */
-                    margin-top: 20px;
-                }
-                .total-summary-container span {
-                    font-size: 17px; /* Erhöht von 15px */
-                }
+            .suggestions-box {
+                top: calc(100% + 4px);
+                border-radius: 10px;
             }
-
-            @media (max-width: 400px) {
-                /* Noch stärkere Anpassungen für sehr kleine Bildschirme */
-                .food-search-wrapper {
-                    width: 95vw;
-                }
-                .result-container,
-                .total-summary-container {
-                    width: 95vw;
-                }
-
-                .food-search-container {
-                    height: 55px; /* Erhöht von 48px */
-                    padding-left: 15px; /* Erhöht von 10px */
-                    padding-right: 15px; /* Erhöht von 10px */
-                }
-                .food-search-icon {
-                    font-size: 26px; /* Größer */
-                    margin-right: 12px; /* Mehr Abstand */
-                }
-                .food-search-input {
-                    font-size: 16px; /* Erhöht von 14px */
-                }
-                .food-search-container.active-quantity .food-search-input {
-                    width: calc(100% - 160px); /* Angepasst */
-                    margin-right: 8px;
-                }
-                .food-search-results {
-                    width: 100%;
-                }
-                .quantity-input-container input[type="number"] {
-                    width: 80px; /* Erhöht von 60px */
-                    font-size: 16px; /* Erhöht von 14px */
-                    padding: 8px 12px; /* Erhöht von 7px 8px */
-                }
-                .quantity-input-container button {
-                    font-size: 15px; /* Erhöht von 13px */
-                    padding: 8px 12px; /* Angepasst */
-                    border-radius: 12px;
-                }
-                .food-search-item {
-                    font-size: 16px; /* Erhöht von 14px */
-                    padding: 12px 15px; /* Erhöht von 10px 12px */
-                }
-                .food-search-item .item-number {
-                    font-size: 15px;
-                }
-
-                .info-popup {
-                    padding: 12px 15px; /* Erhöht von 10px 12px */
-                    font-size: 15px; /* Erhöht von 13px */
-                    width: 100%;
-                    transform: translateX(-50%);
-                }
-                .info-popup #infoPopupText {
-                    font-size: 15px; /* Erhöht von 13px */
-                }
-                .info-popup .close-info-popup {
-                    font-size: 22px; /* Größer */
-                }
-
-                .result-item {
-                    padding: 12px; /* Erhöht von 10px */
-                    font-size: 16px; /* Erhöht von 14px */
-                }
-                .result-item .item-number-list {
-                    font-size: 15px; /* Erhöht von 13px */
-                }
-                .result-item .item-name {
-                    font-size: 16px; /* Erhöht von 14px */
-                }
-                .result-item .quantity-ke-info {
-                    font-size: 14px; /* Erhöht von 12px */
-                    margin-left: 24px; /* Angepasst */
-                }
-                .result-item span .ke-value {
-                    font-size: 14px; /* Erhöht von 12px */
-                }
-
-                .total-summary-container {
-                    padding: 12px 15px; /* Erhöht von 10px 12px */
-                    font-size: 16px; /* Erhöht von 14px */
-                    margin-top: 15px;
-                }
-                .total-summary-container span {
-                    font-size: 16px; /* Erhöht von 14px */
-                }
+            .suggestions-box li {
+                padding: 10px 15px;
+                font-size: 15px;
             }
-        </style>
-    </head>
-    <body>
-        <div class="food-search-wrapper">
-            <div class="info-popup" id="infoPopup">
-                <span id="infoPopupText"></span>
-                <button
-                    class="close-info-popup"
-                    id="closeInfoPopup"
-                    aria-label="Informationen schließen"
-                >
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="food-search-container">
-                <i class="fas fa-search food-search-icon"></i>
-                <input
-                    type="text"
-                    class="food-search-input"
-                    placeholder="Essen suchen"
-                    aria-label="Essen suchen"
-                    autocomplete="off"
-                />
-                <div
-                    class="quantity-input-container"
-                    id="quantityInputContainer"
-                >
-                    <input
-                        type="number"
-                        id="foodQuantity"
-                        placeholder="Gramm"
-                        min="1"
-                        role="spinbutton"
-                        aria-label="Menge in Gramm"
-                    />
-                    <button id="submitQuantity" aria-label="Menge bestätigen">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="food-search-results" role="listbox"></div>
+            .suggestions-box li:first-child {
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+            .suggestions-box li:last-child {
+                border-bottom-left-radius: 10px;
+                border-bottom-right-radius: 10px;
+            }
+            .carb-result-box {
+                width: 90vw;
+                font-size: 20px;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .food-search-container {
+                height: 40px;
+                border-radius: 8px;
+            }
+            .food-search-icon {
+                left: 10px;
+                font-size: 16px;
+            }
+            .food-search-input {
+                font-size: 14px;
+                padding: 0 10px 0 40px;
+            }
+            .gramm-input {
+                width: 70px;
+                font-size: 14px;
+                border-top-right-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
+            .suggestions-box {
+                top: calc(100% + 3px);
+                border-radius: 8px;
+            }
+            .suggestions-box li {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            .suggestions-box li:first-child {
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+            }
+            .suggestions-box li:last-child {
+                border-bottom-left-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
+            .carb-result-box {
+                width: 90vw;
+                font-size: 18px;
+                padding: 12px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="food-search-wrapper">
+        <div class="food-search-container">
+            <i class="fas fa-search food-search-icon"></i>
+            <input type="text" class="food-search-input" placeholder="food.search">
+            <input type="number" class="gramm-input" placeholder="Gramm">
         </div>
-        <div
-            class="result-container"
-            id="resultContainer"
-            role="region"
-            aria-live="polite"
-        ></div>
+        <ul class="suggestions-box"></ul>
+    </div>
 
-        <div class="total-summary-container" id="totalSummaryContainer">
-            <span>Gesamtgewicht: <span id="totalWeight">0</span> g</span>
-            <span>Gesamt-KE: <span id="totalKe">0.00</span> KE</span>
+    <div class="carb-result-box" id="carbResult">
         </div>
 
-        <script>
-            const foodData = {
-                Bratkartoffel: {
-                    keFactor: 1.8,
-                    info: "Eine Portion Bratkartoffeln sind ca. 150g.",
-                },
-                "Nudeln (eifrei)": {
-                    keFactor: 3,
-                    info: "Eine normale Portion Nudeln (ungekocht) ist ca. 80-100g.",
-                },
-                "Nudeln (eihaltig)": { keFactor: 2.3 },
-                Reis: {
-                    keFactor: 2.81,
-                    info: "Eine Portion Reis (ungekocht) ist ca. 60-80g.",
-                },
-                Pizza: {
-                    keFactor: 2.85,
-                    info: "Ein Stück Pizza (ca. 1/8) wiegt ca. 100-150g.",
-                },
-                Schokolade: {
-                    keFactor: 6.1,
-                    info: "Ein Riegel Schokolade sind ca. 25g.",
-                },
-                Haferflocken: {
-                    keFactor: 6.66,
-                    info: "Eine Portion Haferflocken sind ca. 50g.",
-                },
-                Banane: {
-                    keFactor: 1.25,
-                    info: "Eine mittelgroße Banane wiegt ca. 120g.",
-                },
-                Apfel: {
-                    keFactor: 1.2,
-                    info: "Ein mittelgroßer Apfel wiegt ca. 150g.",
-                },
-                "Brot (Vollkorn)": {
-                    keFactor: 4.5,
-                    info: "Eine Scheibe Vollkornbrot sind ca. 50g.",
-                },
-                "Joghurt (Natur)": { keFactor: 0.4 },
-                "Milch (1.5%)": { keFactor: 0.5 },
-                Kartoffelbrei: { keFactor: 1.5 },
-                "Fisch (Lachs)": { keFactor: 0 },
-                Hähnchenbrust: { keFactor: 0 },
-                Brokkoli: { keFactor: 0.3 },
-                Tomaten: { keFactor: 0.2 },
-            };
+    <script>
+        const foodItems = [
+            { name: "Apfel", carbs: 14 },
+            { name: "Banane", carbs: 23 },
+            { name: "Brot (Vollkorn)", carbs: 45 },
+            { name: "Nudeln (gekocht)", carbs: 30 },
+            { name: "Reis (gekocht)", carbs: 28 },
+            { name: "Hähnchenbrust", carbs: 0 },
+            { name: "Rindfleisch", carbs: 0 },
+            { name: "Lachs", carbs: 0 },
+            { name: "Ei", carbs: 1 },
+            { name: "Milch", carbs: 5 },
+            { name: "Joghurt", carbs: 4 },
+            { name: "Käse", carbs: 1 },
+            { name: "Kartoffeln", carbs: 17 },
+            { name: "Karotten", carbs: 7 },
+            { name: "Brokkoli", carbs: 4 },
+            { name: "Spinat", carbs: 1 },
+            { name: "Tomaten", carbs: 3 },
+            { name: "Gurke", carbs: 4 },
+            { name: "Zwiebel", carbs: 9 },
+            { name: "Paprika", carbs: 6 },
+            { name: "Orange", carbs: 12 },
+            { name: "Weintrauben", carbs: 18 },
+            { name: "Erdbeeren", carbs: 8 },
+            { name: "Blaubeeren", carbs: 14 },
+            { name: "Haferflocken", carbs: 66 },
+            { name: "Mandeln", carbs: 22 },
+            { name: "Walnüsse", carbs: 14 },
+            { name: "Olivenöl", carbs: 0 },
+            { name: "Butter", carbs: 0 },
+            { name: "Müsli", carbs: 70 },
+            { name: "Pizza", carbs: 30 }, /* Example value, varies widely */
+            { name: "Burger", carbs: 25 }, /* Example value, varies widely */
+            { name: "Pommes", carbs: 41 },
+            { name: "Schokolade", carbs: 55 },
+            { name: "Gummibärchen", carbs: 77 },
+            { name: "Cola", carbs: 10 },
+            { name: "Wasser", carbs: 0 },
+            { name: "Kaffee", carbs: 0 },
+            { name: "Tee", carbs: 0 },
+            { name: "Linsen", carbs: 20 },
+            { name: "Kichererbsen", carbs: 27 },
+            { name: "Bohnen", carbs: 15 },
+            { name: "Quark", carbs: 4 },
+            { name: "Tofu", carbs: 2 },
+            { name: "Avocado", carbs: 9 },
+            { name: "Honig", carbs: 82 },
+            { name: "Ahornsirup", carbs: 67 }
+        ];
 
-            const foodInput = document.querySelector(".food-search-input");
-            const foodResultsContainer = document.querySelector(
-                ".food-search-results",
-            );
-            const quantityInputContainer = document.getElementById(
-                "quantityInputContainer",
-            );
-            const foodQuantityInput = document.getElementById("foodQuantity");
-            const submitQuantityButton =
-                document.getElementById("submitQuantity");
-            const foodSearchContainer = document.querySelector(
-                ".food-search-container",
-            );
-            const resultContainer = document.getElementById("resultContainer");
-            const infoPopup = document.getElementById("infoPopup");
-            const infoPopupText = document.getElementById("infoPopupText");
-            const closeInfoPopupButton =
-                document.getElementById("closeInfoPopup");
+        const searchInput = document.querySelector('.food-search-input');
+        const grammInput = document.querySelector('.gramm-input');
+        const suggestionsBox = document.querySelector('.suggestions-box');
+        const foodSearchContainer = document.querySelector('.food-search-container');
+        const carbResultBox = document.getElementById('carbResult');
 
-            const totalSummaryContainer = document.getElementById(
-                "totalSummaryContainer",
-            );
-            const totalWeightSpan = document.getElementById("totalWeight");
-            const totalKeSpan = document.getElementById("totalKe");
+        let selectedFood = null;
+        let isClickingSuggestion = false; // Flag to prevent blur from closing suggestions immediately
 
-            let selectedFoodName = "";
-            const defaultPlaceholder = "Essen suchen";
-            let results = [];
-            let currentMatchingFoods = [];
-            let focusedItemIndex = -1; // Index des aktuell fokussierten Elements in den Suchergebnissen
+        function calculateCarbs() {
+            const grams = parseFloat(grammInput.value);
 
-            /**
-             * Setzt den Suchzustand zurück und versteckt die Mengeneingabe sowie die Suchergebnisse.
-             * @param {boolean} clearInput - Wenn true, wird der Wert des Suchfelds geleert.
-             */
-            function resetSearchState(clearInput = false) {
-                if (clearInput) {
-                    foodInput.value = "";
-                }
-                selectedFoodName = "";
-                foodInput.placeholder = defaultPlaceholder;
-                foodResultsContainer.classList.remove("show");
-                quantityInputContainer.classList.remove("show");
-                foodSearchContainer.classList.remove("active-quantity");
-                foodQuantityInput.value = "";
-                currentMatchingFoods = [];
-                infoPopup.classList.remove("show");
-                clearFocusFromResults(); // Fokus zurücksetzen
+            if (!selectedFood || isNaN(grams) || grams <= 0) {
+                carbResultBox.classList.remove('active');
+                return;
             }
 
-            /**
-             * Entfernt den Fokus-Stil von allen Suchergebnissen.
-             */
-            function clearFocusFromResults() {
-                const focusedItem =
-                    foodResultsContainer.querySelector(".focused-by-number");
-                if (focusedItem) {
-                    focusedItem.classList.remove("focused-by-number");
-                }
-                focusedItemIndex = -1;
+            const carbsPer100g = selectedFood.carbs;
+            const calculatedCarbs = (grams / 100) * carbsPer100g;
+
+            carbResultBox.innerHTML = `Kohlenhydrate: <span>${calculatedCarbs.toFixed(1)} KE</span>`;
+            carbResultBox.classList.add('active');
+        }
+
+        searchInput.addEventListener('input', () => {
+            const input = searchInput.value.toLowerCase();
+            suggestionsBox.innerHTML = '';
+            selectedFood = null;
+            carbResultBox.classList.remove('active');
+
+            if (input.length === 0) {
+                suggestionsBox.classList.remove('active');
+                return;
             }
 
-            /**
-             * Setzt den Fokus auf ein bestimmtes Element in den Suchergebnissen.
-             * @param {number} index - Der Index des Elements, das fokussiert werden soll.
-             */
-            function focusFoodItem(index) {
-                clearFocusFromResults();
-                const items =
-                    foodResultsContainer.querySelectorAll(".food-search-item");
-                if (index >= 0 && index < items.length) {
-                    const itemToFocus = items[index];
-                    itemToFocus.classList.add("focused-by-number");
-                    // Sicherstellen, dass das Element sichtbar ist
-                    // 'center' statt 'nearest' um es besser in die Mitte zu rücken auf kleinen Bildschirmen
-                    itemToFocus.scrollIntoView({
-                        block: "center",
-                        behavior: "smooth",
+            const filteredItems = foodItems.filter(item =>
+                item.name.toLowerCase().includes(input)
+            );
+
+            if (filteredItems.length > 0) {
+                filteredItems.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item.name;
+
+                    // Use 'mousedown' (desktop) and 'touchend' (mobile)
+                    // mousedown prevents blur from happening before click on desktop
+                    // touchend is more immediate on mobile
+                    li.addEventListener('mousedown', (e) => {
+                        e.preventDefault(); // Prevent input blur on mousedown
+                        searchInput.value = item.name;
+                        selectedFood = item;
+                        suggestionsBox.classList.remove('active');
+                        calculateCarbs();
                     });
-                    focusedItemIndex = index;
-                }
-            }
-
-            /**
-             * Aktualisiert den Container mit den berechneten Ergebnissen.
-             * Fügt auch die Swipe-to-delete-Funktionalität hinzu.
-             */
-            function updateResultContainer() {
-                // Wenn keine Elemente vorhanden sind, alles verstecken
-                if (results.length === 0) {
-                    resultContainer.classList.remove("show");
-                    resultContainer.innerHTML = "";
-                    totalSummaryContainer.classList.remove("show");
-                    totalWeightSpan.textContent = "0";
-                    totalKeSpan.textContent = "0.00";
-                    return;
-                }
-
-                let totalWeight = 0;
-                let totalKE = 0;
-
-                resultContainer.innerHTML = results
-                    .map((result, index) => {
-                        totalWeight += result.quantity;
-                        totalKE += result.ke;
-
-                        // ANGEPASSTE HTML-STRUKTUR FÜR KOMPAKTERE ANZEIGE AUF MOBIL
-                        return `
-                <div class="result-item" data-index="${index}" tabindex="0" role="listitem" aria-label="${result.name}: ${result.quantity} Gramm, ${result.ke.toFixed(2)} KE">
-                    <div class="result-item-content">
-                        <span class="item-number-list">${index + 1}.</span>
-                        <span class="item-name">${result.name}</span>
-                        <span class="quantity-ke-info">${result.quantity} g - <span class="ke-value">${result.ke.toFixed(2)} KE</span></span>
-                    </div>
-                    <div class="delete-indicator" id="deleteIndicator${index}" aria-hidden="true">
-                        <i class="fas fa-trash-alt"></i>
-                    </div>
-                </div>
-                `;
-                    })
-                    .join("");
-
-                resultContainer.classList.add("show");
-                attachHammerEvents();
-
-                // Gesamtbox nur anzeigen, wenn ZWEI oder mehr unterschiedliche Lebensmittel hinzugefügt wurden
-                if (results.length >= 2) {
-                    totalWeightSpan.textContent = totalWeight;
-                    totalKeSpan.textContent = totalKE.toFixed(2);
-                    totalSummaryContainer.classList.add("show");
-                } else {
-                    totalSummaryContainer.classList.remove("show");
-                }
-            }
-
-            /**
-             * Fügt Hammer.js Events für die Swipe-to-delete-Funktion hinzu.
-             */
-            function attachHammerEvents() {
-                results.forEach((_, index) => {
-                    const item = document.querySelector(
-                        `.result-item[data-index="${index}"]`,
-                    );
-                    if (!item) return;
-
-                    const mc = new Hammer(item);
-                    let posX = 0;
-                    const deleteThreshold = -100;
-                    const indicatorMaxWidth = 70;
-
-                    mc.get("pan").set({
-                        direction: Hammer.DIRECTION_HORIZONTAL,
+                    li.addEventListener('touchend', (e) => {
+                        e.preventDefault(); // Prevent default touch behavior (like zooming)
+                        searchInput.value = item.name;
+                        selectedFood = item;
+                        suggestionsBox.classList.remove('active');
+                        calculateCarbs();
                     });
 
-                    mc.on("panstart", function (e) {
-                        posX = e.center.x;
-                        item.style.transition = "none";
-                        const indicator = document.getElementById(
-                            `deleteIndicator${index}`,
-                        );
-                        indicator.style.transition = "none";
-                        indicator.classList.remove("show-icon");
-                    });
-
-                    mc.on("panmove", function (e) {
-                        const deltaX = e.center.x - posX;
-                        const indicator = document.getElementById(
-                            `deleteIndicator${index}`,
-                        );
-
-                        if (deltaX < 0) {
-                            item.style.transform = `translateX(${deltaX}px)`;
-
-                            const currentIndicatorWidth = Math.min(
-                                indicatorMaxWidth,
-                                -deltaX,
-                            );
-                            indicator.style.width = `${currentIndicatorWidth}px`;
-
-                            if (deltaX < deleteThreshold) {
-                                indicator.classList.add("show-icon");
-                            } else {
-                                indicator.classList.remove("show-icon");
-                            }
-                        } else {
-                            item.style.transform = `translateX(0px)`;
-                            indicator.style.width = "0px";
-                            indicator.classList.remove("show-icon");
-                        }
-                    });
-
-                    mc.on("panend", function (e) {
-                        const deltaX = e.center.x - posX;
-                        const indicator = document.getElementById(
-                            `deleteIndicator${index}`,
-                        );
-
-                        item.style.transition = "transform 0.2s ease";
-                        indicator.style.transition = "width 0.2s ease";
-
-                        if (deltaX < deleteThreshold) {
-                            results.splice(index, 1);
-                            item.style.transform = `translateX(0)`;
-                            indicator.style.width = "0";
-                            indicator.classList.remove("show-icon");
-
-                            setTimeout(() => {
-                                updateResultContainer();
-                            }, 200);
-                        } else {
-                            item.style.transform = "translateX(0)";
-                            indicator.style.width = "0";
-                            indicator.classList.remove("show-icon");
-
-                            setTimeout(() => {
-                                updateResultContainer();
-                            }, 100);
-                        }
-                    });
+                    suggestionsBox.appendChild(li);
                 });
+                suggestionsBox.classList.add('active');
+            } else {
+                suggestionsBox.classList.remove('active');
             }
+        });
 
-            /**
-             * Wählt ein Lebensmittel aus den Vorschlägen aus und bereitet das Mengeneingabefeld vor.
-             * @param {string} foodName - Der Name des ausgewählten Lebensmittels.
-             */
-            function selectFoodItem(foodName) {
-                selectedFoodName = foodName;
-                foodInput.value = foodName;
-                foodInput.placeholder = foodName;
+        grammInput.addEventListener('input', calculateCarbs);
 
-                foodResultsContainer.classList.remove("show");
-                quantityInputContainer.classList.add("show");
-                foodSearchContainer.classList.add("active-quantity");
-                foodQuantityInput.value = "";
-                foodQuantityInput.placeholder = `Gramm`;
-                foodQuantityInput.focus();
 
-                const foodInfo = foodData[foodName]
-                    ? foodData[foodName].info
-                    : null;
-                if (foodInfo) {
-                    infoPopupText.textContent = foodInfo;
-                    infoPopup.classList.add("show");
-                } else {
-                    infoPopup.classList.remove("show");
-                }
-                clearFocusFromResults(); // Fokus nach Auswahl zurücksetzen
+        // --- Verbesserungen für Mobilgeräte ---
+
+        // Prevent immediate blur when tapping on a suggestion
+        // This is a common pattern for autocomplete on mobile
+        suggestionsBox.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevent the search input from blurring when starting a click on a suggestion
+        });
+        suggestionsBox.addEventListener('touchstart', (e) => {
+             // We don't need preventDefault here for touchstart directly on the suggestionsBox,
+             // as touchend on the li handles the selection and stops propagation.
+             // This might be useful if you had draggable suggestions, etc.
+        });
+
+
+        // Hide suggestions when clicking/tapping outside the search area
+        document.addEventListener('click', (event) => {
+            // Check if the click occurred outside both the search container and the suggestions box
+            if (!foodSearchContainer.contains(event.target) && !suggestionsBox.contains(event.target)) {
+                suggestionsBox.classList.remove('active');
             }
+        });
 
-            foodInput.addEventListener("input", () => {
-                const searchTerm = foodInput.value;
-                foodResultsContainer.innerHTML = "";
-                currentMatchingFoods = [];
-                clearFocusFromResults();
-
-                if (
-                    selectedFoodName &&
-                    searchTerm.toLowerCase() !==
-                        selectedFoodName.toLowerCase() &&
-                    searchTerm !== ""
-                ) {
-                    selectedFoodName = "";
-                    quantityInputContainer.classList.remove("show");
-                    foodSearchContainer.classList.remove("active-quantity");
-                    infoPopup.classList.remove("show");
+        // Use a flag for blur event to better handle mobile focus changes
+        searchInput.addEventListener('blur', () => {
+            // Use a small timeout to allow a potential 'touchend' or 'mousedown' on a suggestion to fire first
+            setTimeout(() => {
+                // If the active element is not within the suggestions box, hide it
+                // This handles cases where user taps outside the input/suggestions
+                if (!suggestionsBox.contains(document.activeElement) && document.activeElement !== searchInput) {
+                    suggestionsBox.classList.remove('active');
                 }
+            }, 100);
+        });
 
-                if (searchTerm.length === 0) {
-                    foodResultsContainer.classList.remove("show");
-                    return;
-                }
+        // Add a 'focus' event listener to show suggestions if the input is focused and has text
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.length > 0) {
+                // Trigger input event to re-filter and show suggestions
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        });
 
-                // NEUE LOGIK: Wenn nur Ziffern eingegeben wurden, fokussieren (nicht auswählen)
-                // Prüft, ob der Suchbegriff NUR aus Ziffern besteht (auch mehr als eine Ziffer)
-                if (/^\d+$/.test(searchTerm)) {
-                    const typedNumber = parseInt(searchTerm);
-                    if (typedNumber >= 1 && typedNumber <= 9) {
-                        const allFoods = Object.keys(foodData);
-                        const tempMatchingFoods = allFoods.slice(0, 9);
+    </script>
 
-                        if (typedNumber - 1 < tempMatchingFoods.length) {
-                            focusFoodItem(typedNumber - 1);
-                        }
-                    }
-                }
-
-                // Normale Suchlogik, die IMMER ausgeführt wird
-                const lowerCaseSearchTerm = searchTerm.toLowerCase();
-                const allMatchingFoods = Object.keys(foodData).filter(
-                    (foodName) =>
-                        foodName.toLowerCase().includes(lowerCaseSearchTerm),
-                );
-
-                currentMatchingFoods = allMatchingFoods.slice(0, 9);
-
-                // Anzeige der Suchergebnisse
-                if (currentMatchingFoods.length > 0) {
-                    currentMatchingFoods.forEach((foodName, index) => {
-                        const foodItemDiv = document.createElement("div");
-                        foodItemDiv.classList.add("food-search-item");
-                        foodItemDiv.innerHTML = `<span class="item-number">${index + 1}</span> ${foodName}`;
-                        foodItemDiv.setAttribute("role", "option");
-                        foodItemDiv.setAttribute("tabindex", "0");
-                        foodItemDiv.setAttribute("data-food-name", foodName);
-
-                        foodItemDiv.addEventListener("click", () => {
-                            selectFoodItem(foodName);
-                        });
-
-                        foodItemDiv.addEventListener("keydown", (e) => {
-                            if (e.key === "Enter") {
-                                selectFoodItem(foodName);
-                            }
-                        });
-
-                        foodResultsContainer.appendChild(foodItemDiv);
-                    });
-                    foodResultsContainer.classList.add("show");
-                } else {
-                    foodResultsContainer.classList.remove("show");
-                }
-            });
-
-            foodInput.addEventListener("keydown", (e) => {
-                if (
-                    foodResultsContainer.classList.contains("show") &&
-                    foodInput === document.activeElement
-                ) {
-                    if (e.key === "Enter" && focusedItemIndex !== -1) {
-                        e.preventDefault();
-                        const foodName = currentMatchingFoods[focusedItemIndex];
-                        if (foodName) {
-                            selectFoodItem(foodName);
-                        }
-                    } else if (
-                        e.key === "Enter" &&
-                        currentMatchingFoods.length > 0
-                    ) {
-                        e.preventDefault();
-                        selectFoodItem(currentMatchingFoods[0]);
-                    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-                        e.preventDefault();
-                        let nextIndex = focusedItemIndex;
-                        if (e.key === "ArrowDown") {
-                            nextIndex =
-                                (focusedItemIndex + 1) %
-                                currentMatchingFoods.length;
-                        } else if (e.key === "ArrowUp") {
-                            nextIndex =
-                                (focusedItemIndex -
-                                    1 +
-                                    currentMatchingFoods.length) %
-                                currentMatchingFoods.length;
-                        }
-                        focusFoodItem(nextIndex);
-                    }
-                }
-            });
-
-            submitQuantityButton.addEventListener("click", () => {
-                submitQuantityButton.classList.add("clicked");
-                setTimeout(() => {
-                    submitQuantityButton.classList.remove("clicked");
-                }, 200);
-
-                const quantity = parseFloat(foodQuantityInput.value);
-                if (quantity > 0 && selectedFoodName) {
-                    const keFactor = foodData[selectedFoodName]
-                        ? foodData[selectedFoodName].keFactor
-                        : 0;
-                    const calculatedKE = (quantity * keFactor) / 100;
-
-                    let found = false;
-                    for (let i = 0; i < results.length; i++) {
-                        if (results[i].name === selectedFoodName) {
-                            results[i].quantity += quantity;
-                            results[i].ke += calculatedKE;
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        results.push({
-                            name: selectedFoodName,
-                            quantity: quantity,
-                            ke: calculatedKE,
-                        });
-                    }
-
-                    updateResultContainer();
-                    resetSearchState(true);
-                } else {
-                    alert(
-                        "Bitte geben Sie eine gültige Menge (mindestens 1 Gramm) ein und wählen Sie ein Essen aus.",
-                    );
-                    foodQuantityInput.focus();
-                }
-            });
-
-            closeInfoPopupButton.addEventListener("click", () => {
-                infoPopup.classList.remove("show");
-            });
-
-            document.addEventListener("click", (e) => {
-                const isClickInsideSearchWrapper = e.target.closest(
-                    ".food-search-wrapper",
-                );
-                const isClickInsideResultContainer =
-                    e.target.closest("#resultContainer");
-                const isClickInsideInfoPopup = e.target.closest("#infoPopup");
-                const isClickInsideTotalSummary = e.target.closest(
-                    "#totalSummaryContainer",
-                );
-
-                if (
-                    !isClickInsideSearchWrapper &&
-                    !isClickInsideResultContainer &&
-                    !isClickInsideInfoPopup &&
-                    !isClickInsideTotalSummary
-                ) {
-                    resetSearchState(true);
-                }
-            });
-
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") {
-                    resetSearchState(true);
-                }
-            });
-
-            document.addEventListener("DOMContentLoaded", () => {
-                foodInput.focus();
-            });
-
-            resetSearchState(true);
-        </script>
-    </body>
+</body>
 </html>
